@@ -9,8 +9,21 @@ let steamid = "76561198154985356";
 
 
 const getSteamUserName = async () => {
-    let response = await axios.get(Endpoint.PlayerSummaries + "?key=" + key + "&steamids=" + steamid + "&format=json");
+    let response = await axios.get(Endpoint.GetPlayerSummaries + "?key=" + key + "&steamids=" + steamid + "&format=json");
     return (response as any)["data"]["response"]["players"][0]["personaname"];
 }
 
-export default getSteamUserName;
+const getAchievements = async (appid: string) => {
+    let response = await axios.get(Endpoint.GetPlayerAchievements + "?key=" + key + "&steamid=" + steamid);
+    return (response as any)["data"]["playerstats"]["achievements"].length;
+}
+
+const sumAchievements = async () => {
+    let response = await axios.get(Endpoint.GetOwnedGames + "?key=" + key + "&steamid=" + steamid);
+    
+    ((response as any)["data"]["response"]["games"] as any[]).forEach(game => {
+         getAchievements(game["appid"]);
+    });
+}
+
+export {getSteamUserName, getTotalAchievements};
