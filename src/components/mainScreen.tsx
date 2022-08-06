@@ -4,7 +4,7 @@ import { Text, Image, View, StyleSheet } from "react-native";
 import Colors from "../config/colors";
 import Endpoint from "../config/endpoint";
 import Field from "../config/fields";
-import SteamRequests from "./requests";
+import getSteamUserName from "./requests";
 
 const MainScreen = () => {
   const [pageData, setPageData] = useState({
@@ -35,9 +35,12 @@ const MainScreen = () => {
     ]
   });
 
-  SteamRequests({endpoint: Endpoint.PlayerSummaries, fieldName: Field.steamName}).then(x => {
-    setPageData({...pageData, userName: x});
-  });
+  if (!pageData.userName)
+  {
+    getSteamUserName().then(x => {
+      setPageData({...pageData, userName: x});
+    });
+  }
 
   return (
     <View style={styles.container}>
