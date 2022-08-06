@@ -4,7 +4,7 @@ import { Text, Image, View, StyleSheet } from "react-native";
 import Colors from "../config/colors";
 import Endpoint from "../config/endpoint";
 import Field from "../config/fields";
-import getSteamUserName from "./requests";
+import { getSteamTimePlayed, getSteamUserName } from "./requests";
 
 const MainScreen = () => {
   const [pageData, setPageData] = useState({
@@ -42,9 +42,17 @@ const MainScreen = () => {
     });
   }
 
+  if (!pageData.timePlayed)
+  {
+    getSteamTimePlayed().then(requestedTimePlayed => {
+      setPageData({...pageData, timePlayed: requestedTimePlayed});
+    });
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.steam}>{pageData.userName}</Text>
+      <Text style={styles.steam}>{pageData.timePlayed}</Text>
       {/* <Image
         source={{ uri: "https://reactnative.dev/docs/assets/p_cat1.png" }}
         // source={{uri: "http://media.steampowered.com/steamcommunity/public/images/apps/440/07385eb55b5ba974aebbe74d3c99626bda7920b8.jpg"}}
