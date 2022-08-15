@@ -5,7 +5,7 @@ import Constants from 'expo-constants'
 import Colors from "../config/colors";
 import Endpoint from "../config/endpoint";
 import Field from "../config/fields";
-import { getOwnedGames, getSteamTimePlayed, getSteamUserName, sumAchieved } from "./requests";
+import { getOwnedGames, getTotalAchievements, getSteamTimePlayed, getSteamUserName, sumAchieved } from "./requests";
 
 const MainScreen = () => {
   const [pageData, setPageData] = useState({
@@ -53,6 +53,7 @@ const MainScreen = () => {
             auxPageData.achievements = requestedAchieved;
           })
         ]).then(() => {
+          auxPageData.percentage = Math.round(auxPageData.achievements / getTotalAchievements() * 100);
           setPageData({...auxPageData});
       })})
     }, []
@@ -63,6 +64,7 @@ const MainScreen = () => {
       <Text style={styles.steam}>{pageData.userName}</Text>
       <Text style={styles.steam}>{pageData.timePlayed}</Text>
       <Text style={styles.steam}>{pageData.achievements}</Text>
+      <Text style={styles.steam}>{pageData.percentage}</Text>
       {/* <Image
         source={{ uri: "https://reactnative.dev/docs/assets/p_cat1.png" }}
         // source={{uri: "http://media.steampowered.com/steamcommunity/public/images/apps/440/07385eb55b5ba974aebbe74d3c99626bda7920b8.jpg"}}

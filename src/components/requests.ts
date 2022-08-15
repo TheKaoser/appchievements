@@ -66,4 +66,16 @@ const sumAchieved = async () => {
     return totalAchieved;
 }
 
-export { getSteamUserName, getSteamTimePlayed, getOwnedGames, sumAchieved };
+const getTotalAchievements = () => {
+    let totalAchievements = 0;
+    games.forEach(game => {
+        if (game.achieved > 0)
+        {
+            totalAchievements += game.achievements?.length || 0;
+        }
+    })
+
+    return totalAchievements;
+}
+
+export { getSteamUserName, getSteamTimePlayed, getOwnedGames, sumAchieved, getTotalAchievements };
