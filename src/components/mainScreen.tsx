@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, Image, View, StyleSheet } from "react-native";
+import Constants from 'expo-constants'
 
 import Colors from "../config/colors";
 import Endpoint from "../config/endpoint";
 import Field from "../config/fields";
-import { getSteamTimePlayed, getSteamUserName } from "./requests";
+import { getOwnedGames, getSteamTimePlayed, getSteamUserName, sumAchieved } from "./requests";
 
 const MainScreen = () => {
   const [pageData, setPageData] = useState({
@@ -35,24 +36,33 @@ const MainScreen = () => {
     ]
   });
 
-  if (!pageData.userName)
-  {
-    getSteamUserName().then(x => {
-      setPageData({...pageData, userName: x});
-    });
-  }
-
-  if (!pageData.timePlayed)
-  {
-    getSteamTimePlayed().then(requestedTimePlayed => {
-      setPageData({...pageData, timePlayed: requestedTimePlayed});
-    });
-  }
+  useEffect(
+    () => {
+      let auxPageData = pageData;
+      Promise.all([
+        getSteamUserName().then(requestedUserName => {
+          auxPageData.userName = requestedUserName;
+        }),
+        getOwnedGames()
+      ]).then(() => {
+        Promise.all([
+          getSteamTimePlayed().then(requestedTimePlayed => {
+            auxPageData.timePlayed = requestedTimePlayed;
+          }),
+          sumAchieved().then(requestedAchieved => {
+            auxPageData.achievements = requestedAchieved;
+          })
+        ]).then(() => {
+          setPageData({...auxPageData});
+      })})
+    }, []
+  );
 
   return (
     <View style={styles.container}>
       <Text style={styles.steam}>{pageData.userName}</Text>
       <Text style={styles.steam}>{pageData.timePlayed}</Text>
+      <Text style={styles.steam}>{pageData.achievements}</Text>
       {/* <Image
         source={{ uri: "https://reactnative.dev/docs/assets/p_cat1.png" }}
         // source={{uri: "http://media.steampowered.com/steamcommunity/public/images/apps/440/07385eb55b5ba974aebbe74d3c99626bda7920b8.jpg"}}
@@ -67,15 +77,11 @@ export default MainScreen;
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: Constants.statusBarHeight,
     flex: 1,
-    backgroundColor: "#000",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between"
   },
   steam: {
-    flex: 1,
-    backgroundColor: "#FFF",
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

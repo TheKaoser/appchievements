@@ -1,11 +1,26 @@
-import { Dispatch, SetStateAction } from "react";
 import Endpoint from "../config/endpoint";
-import Field from "../config/fields";
+import Game from "./game";
 
 const axios = require("axios");
 
 let key = "97B27B336B15D2AF683F9AC509191D6F";
 let steamid = "76561198154985356";
+
+let games: Game[] = [];
+
+const getOwnedGames = async () => {
+    if (games.length == 0) {
+        let response = await axios.get(Endpoint.GetOwnedGames + "?key=" + key + "&steamid=" + steamid + "&format=json");
+        ((response as any)["data"]["response"]["games"] as Game[]).forEach(game => {
+            let newGame : Game = { 
+                appid : game.appid, 
+                playtime_forever: game.playtime_forever,
+                achieved: 0,
+            }
+            games.push(newGame);
+        });
+    }
+}
 
 const getSteamUserName = async () => {
     let response = await axios.get(Endpoint.GetPlayerSummaries + "?key=" + key + "&steamids=" + steamid + "&format=json");
@@ -13,32 +28,42 @@ const getSteamUserName = async () => {
 }
 
 const getSteamTimePlayed = async () => {
-
     let totalTimePlayed = 0;
-    let gameTimePlayed = 0;
     
-    let response = await axios.get(Endpoint.GetOwnedGames + "?key=" + key + "&steamid=" + steamid + "&format=json");
-    let games = (response as any)["data"]["response"]["games"];
+    await getOwnedGames();
 
-    (games as any[]).forEach(game => {
-        gameTimePlayed = game["playtime_forever"];
-        totalTimePlayed += gameTimePlayed;
+    games.forEach(game => {
+        totalTimePlayed += game.playtime_forever!;
     });
 
-    return totalTimePlayed/60;
+    return totalTimePlayed / 60;
 }
 
-const getAchievements = async (appid: string) => {
-    let response = await axios.get(Endpoint.GetPlayerAchievements + "?key=" + key + "&steamid=" + steamid);
-    return (response as any)["data"]["playerstats"]["achievements"].length;
+const getPlayerAchievements = async (appid: string) => {
+    let game = games.find(game => game.appid == appid);
+    try {
+        let response = await axios.get(Endpoint.GetPlayerAchievements + "?appid=" + appid + "&key=" + key + "&steamid=" + steamid);
+        game = { ...game!, achievements: (response as any)["data"]["playerstats"]["achievements"] };
+        game.achieved = game.achievements!.filter(achievement => achievement.achieved == 1).length;
+        games.splice(games.findIndex(game => game.appid == appid), 1, game);
+    } catch (error) {
+    }
 }
 
-const sumAchievements = async () => {
-    let response = await axios.get(Endpoint.GetOwnedGames + "?key=" + key + "&steamid=" + steamid);
-    
-    ((response as any)["data"]["response"]["games"] as any[]).forEach(game => {
-         getAchievements(game["appid"]);
-    });
+const sumAchieved = async () => {
+    let totalAchieved = 0;
+
+    await getOwnedGames();
+
+    await Promise.all(games.map(async (game) => {
+        await getPlayerAchievements(game.appid);
+      }));
+
+    games.forEach(game => {
+        totalAchieved += game.achieved;
+    })
+
+    return totalAchieved;
 }
 
-export { getSteamUserName, getSteamTimePlayed };
+export { getSteamUserName, getSteamTimePlayed, getOwnedGames, sumAchieved };
