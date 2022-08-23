@@ -47,7 +47,7 @@ const MainScreen = () => {
       ]).then(() => {
         Promise.all([
           getSteamTimePlayed().then(requestedTimePlayed => {
-            auxPageData.timePlayed = requestedTimePlayed;
+            auxPageData.timePlayed = Math.trunc(requestedTimePlayed);
           }),
           sumAchieved().then(requestedAchieved => {
             auxPageData.achievements = requestedAchieved;
